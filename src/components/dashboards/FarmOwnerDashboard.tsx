@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Store, TrendingUp, Settings } from 'lucide-react';
+import UserManagement from '@/components/UserManagement';
 
 const FarmOwnerDashboard = () => {
   return (
@@ -102,6 +103,9 @@ const FarmOwnerDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* User Management Section */}
+      <UserManagement />
     </div>
   );
 };
