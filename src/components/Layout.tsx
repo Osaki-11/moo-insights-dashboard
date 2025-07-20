@@ -35,7 +35,7 @@ const Layout = ({ children, title }: LayoutProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Sprout className="h-8 w-8 text-primary" />
+              <img src="/lovable-uploads/116f37a2-86fb-4d55-b336-c0013fbefcf8.png" alt="Udderly Moolicious Logo" className="h-8 w-8" />
               <h1 className="text-2xl font-bold text-primary">Udderly Moolicious</h1>
             </div>
             
