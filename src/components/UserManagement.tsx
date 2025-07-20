@@ -84,27 +84,32 @@ const UserManagement = () => {
     setIsCreateLoading(true);
 
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Use regular signup instead of admin.createUser
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUser.email,
         password: newUser.password,
-        user_metadata: {
-          full_name: newUser.fullName
+        options: {
+          data: {
+            full_name: newUser.fullName
+          }
         }
       });
 
       if (authError) throw authError;
 
-      // Create profile
+      if (!authData.user) {
+        throw new Error('Failed to create user');
+      }
+
+      // Update the profile that was automatically created by the trigger
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          user_id: authData.user.id,
-          email: newUser.email,
+        .update({
           full_name: newUser.fullName,
           role: newUser.role,
           shop_id: newUser.shopId ? parseInt(newUser.shopId) : null
-        });
+        })
+        .eq('user_id', authData.user.id);
 
       if (profileError) throw profileError;
 
