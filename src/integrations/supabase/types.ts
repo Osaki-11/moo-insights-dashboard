@@ -14,6 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
+      cows: {
+        Row: {
+          birth_date: string | null
+          breed: string | null
+          created_at: string
+          health_status: string
+          id: string
+          last_milking_amount: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          health_status?: string
+          id?: string
+          last_milking_amount?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          breed?: string | null
+          created_at?: string
+          health_status?: string
+          id?: string
+          last_milking_amount?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      egg_records: {
+        Row: {
+          count: number
+          created_at: string
+          date: string
+          id: string
+          quality_grade: string | null
+          updated_at: string
+        }
+        Insert: {
+          count: number
+          created_at?: string
+          date?: string
+          id?: string
+          quality_grade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          quality_grade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feed_inventory: {
+        Row: {
+          cost_per_unit: number | null
+          created_at: string
+          current_stock: number
+          feed_type: string
+          id: string
+          reorder_level: number
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          cost_per_unit?: number | null
+          created_at?: string
+          current_stock: number
+          feed_type: string
+          id?: string
+          reorder_level: number
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          cost_per_unit?: number | null
+          created_at?: string
+          current_stock?: number
+          feed_type?: string
+          id?: string
+          reorder_level?: number
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      milk_records: {
+        Row: {
+          amount: number
+          cow_id: string | null
+          created_at: string
+          date: string
+          id: string
+          milking_time: string | null
+          quality_grade: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cow_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          milking_time?: string | null
+          quality_grade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cow_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          milking_time?: string | null
+          quality_grade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milk_records_cow_id_fkey"
+            columns: ["cow_id"]
+            isOneToOne: false
+            referencedRelation: "cows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -55,6 +192,47 @@ export type Database = {
           },
         ]
       }
+      sales_records: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          product_type: string
+          quantity: number
+          shop_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date?: string
+          id?: string
+          product_type: string
+          quantity: number
+          shop_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          product_type?: string
+          quantity?: number
+          shop_id?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_records_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           created_at: string
@@ -76,6 +254,36 @@ export type Database = {
           location?: string | null
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      slaughter_records: {
+        Row: {
+          animal_type: string
+          count: number
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          weight_kg: number | null
+        }
+        Insert: {
+          animal_type?: string
+          count: number
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          animal_type?: string
+          count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }
