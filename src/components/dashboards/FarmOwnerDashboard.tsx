@@ -54,71 +54,114 @@ interface Shop {
 
 const FarmOwnerDashboard = () => {
   const [shops, setShops] = useState<Shop[]>([]);
+  const [milkingRecords, setMilkingRecords] = useState<MilkingRecord[]>([]);
+  const [eggRecords, setEggRecords] = useState<EggRecord[]>([]);
+  const [slaughterRecords, setSlaughterRecords] = useState<SlaughterRecord[]>([]);
+  const [productionRecords, setProductionRecords] = useState<ProductionRecord[]>([]);
+  const [cows, setCows] = useState<Cow[]>([]);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration - replace with real data fetching
-  const [milkingRecords] = useState<MilkingRecord[]>([
-    { date: new Date(), totalMilk: 45.5 },
-    { date: new Date(Date.now() - 86400000), totalMilk: 42.3 },
-    { date: new Date(Date.now() - 172800000), totalMilk: 48.1 },
-  ]);
-
-  const [eggRecords] = useState<EggRecord[]>([
-    { date: new Date(), totalEggs: 24 },
-    { date: new Date(Date.now() - 86400000), totalEggs: 26 },
-    { date: new Date(Date.now() - 172800000), totalEggs: 22 },
-  ]);
-
-  const [slaughterRecords] = useState<SlaughterRecord[]>([
-    { date: new Date(), count: 2 },
-    { date: new Date(Date.now() - 86400000), count: 0 },
-    { date: new Date(Date.now() - 172800000), count: 1 },
-  ]);
-
-  const [productionRecords] = useState<ProductionRecord[]>([
-    { date: new Date(), rawMilk: 40.2 },
-    { date: new Date(Date.now() - 86400000), rawMilk: 38.5 },
-    { date: new Date(Date.now() - 172800000), rawMilk: 44.1 },
-  ]);
-
-  const [cows] = useState<Cow[]>([
-    { id: '1', name: 'Bella', breed: 'Holstein', healthStatus: 'healthy', lastMilkingAmount: 15.2 },
-    { id: '2', name: 'Daisy', breed: 'Jersey', healthStatus: 'healthy', lastMilkingAmount: 12.8 },
-    { id: '3', name: 'Luna', breed: 'Holstein', healthStatus: 'sick', lastMilkingAmount: 8.5 },
-    { id: '4', name: 'Ruby', breed: 'Guernsey', healthStatus: 'healthy', lastMilkingAmount: 14.3 },
-  ]);
-
-  const [feedItems] = useState<FeedItem[]>([
-    { currentStock: 50, reorderLevel: 100 },
-    { currentStock: 25, reorderLevel: 50 },
-    { currentStock: 150, reorderLevel: 100 },
-  ]);
-
-  const [salesRecords] = useState<SalesRecord[]>([
-    { date: new Date(), amount: 2500, shopId: '1' },
-    { date: new Date(), amount: 1800, shopId: '2' },
-    { date: new Date(Date.now() - 86400000), amount: 2200, shopId: '1' },
-    { date: new Date(Date.now() - 86400000), amount: 1950, shopId: '2' },
-  ]);
-
   useEffect(() => {
-    const fetchShops = async () => {
+    const fetchAllData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch shops
+        const { data: shopsData, error: shopsError } = await supabase
           .from('shops')
           .select('*');
+        if (shopsError) throw shopsError;
+        setShops(shopsData || []);
+
+        // Fetch cows
+        const { data: cowsData, error: cowsError } = await supabase
+          .from('cows')
+          .select('*');
+        if (cowsError) throw cowsError;
+        setCows(cowsData?.map(cow => ({
+          id: cow.id,
+          name: cow.name,
+          breed: cow.breed,
+          healthStatus: cow.health_status,
+          lastMilkingAmount: cow.last_milking_amount
+        })) || []);
+
+        // Fetch milk records (last 7 days aggregated by date)
+        const { data: milkData, error: milkError } = await supabase
+          .from('milk_records')
+          .select('date, amount')
+          .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        if (milkError) throw milkError;
         
-        if (error) throw error;
+        const milkByDate = milkData?.reduce((acc: Record<string, number>, record) => {
+          const date = record.date;
+          acc[date] = (acc[date] || 0) + parseFloat(record.amount?.toString() || '0');
+          return acc;
+        }, {}) || {};
         
-        setShops(data || []);
+        setMilkingRecords(Object.entries(milkByDate).map(([date, totalMilk]) => ({
+          date: new Date(date),
+          totalMilk
+        })));
+
+        // Fetch egg records
+        const { data: eggData, error: eggError } = await supabase
+          .from('egg_records')
+          .select('date, count')
+          .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        if (eggError) throw eggError;
+        setEggRecords(eggData?.map(record => ({
+          date: new Date(record.date),
+          totalEggs: record.count
+        })) || []);
+
+        // Fetch slaughter records
+        const { data: slaughterData, error: slaughterError } = await supabase
+          .from('slaughter_records')
+          .select('date, count')
+          .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        if (slaughterError) throw slaughterError;
+        setSlaughterRecords(slaughterData?.map(record => ({
+          date: new Date(record.date),
+          count: record.count
+        })) || []);
+
+        // Use milk records as production records for now
+        setProductionRecords(Object.entries(milkByDate).map(([date, rawMilk]) => ({
+          date: new Date(date),
+          rawMilk: rawMilk * 0.9 // Assume 90% of milk goes to production
+        })));
+
+        // Fetch feed inventory
+        const { data: feedData, error: feedError } = await supabase
+          .from('feed_inventory')
+          .select('current_stock, reorder_level');
+        if (feedError) throw feedError;
+        setFeedItems(feedData?.map(item => ({
+          currentStock: parseFloat(item.current_stock?.toString() || '0'),
+          reorderLevel: parseFloat(item.reorder_level?.toString() || '0')
+        })) || []);
+
+        // Fetch sales records
+        const { data: salesData, error: salesError } = await supabase
+          .from('sales_records')
+          .select('date, amount, shop_id')
+          .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        if (salesError) throw salesError;
+        setSalesRecords(salesData?.map(record => ({
+          date: new Date(record.date),
+          amount: parseFloat(record.amount?.toString() || '0'),
+          shopId: record.shop_id.toString()
+        })) || []);
+
       } catch (error) {
-        console.error('Error fetching shops:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchShops();
+    fetchAllData();
   }, []);
 
   if (loading) {
