@@ -34,12 +34,15 @@ const FarmManagerDashboard = () => {
   const [milkAmount, setMilkAmount] = useState('');
   const [selectedCow, setSelectedCow] = useState('');
   const [milkingPeriod, setMilkingPeriod] = useState('');
-  const [malaAmount, setMalaAmount] = useState('');
-  const [yoghurtAmount, setYoghurtAmount] = useState('');
   const [eggCount, setEggCount] = useState('');
   const [slaughterCount, setSlaughterCount] = useState('');
   const [feedType, setFeedType] = useState('');
   const [feedAmount, setFeedAmount] = useState('');
+  
+  // Milk processing form states
+  const [totalMilkUsed, setTotalMilkUsed] = useState('');
+  const [malaAmount, setMalaAmount] = useState('');
+  const [yoghurtAmount, setYoghurtAmount] = useState('');
 
   const fetchData = async () => {
     try {
@@ -94,9 +97,7 @@ const FarmManagerDashboard = () => {
           cow_id: selectedCow,
           amount: parseFloat(milkAmount),
           milking_time: new Date().toTimeString().split(' ')[0],
-          milking_period: milkingPeriod,
-          mala_amount: parseFloat(malaAmount) || 0,
-          yoghurt_amount: parseFloat(yoghurtAmount) || 0
+          milking_period: milkingPeriod
         });
 
       if (error) throw error;
@@ -111,8 +112,6 @@ const FarmManagerDashboard = () => {
       setMilkAmount('');
       setSelectedCow('');
       setMilkingPeriod('');
-      setMalaAmount('');
-      setYoghurtAmount('');
       fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record milk production", variant: "destructive" });
@@ -176,6 +175,28 @@ const FarmManagerDashboard = () => {
       fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to update feed inventory", variant: "destructive" });
+    }
+  };
+
+  const recordMilkProcessing = async () => {
+    try {
+      const { error } = await supabase
+        .from('milk_processing_records')
+        .insert({
+          total_milk_used: parseFloat(totalMilkUsed),
+          mala_amount: parseFloat(malaAmount) || 0,
+          yoghurt_amount: parseFloat(yoghurtAmount) || 0
+        });
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Milk processing recorded successfully" });
+      setTotalMilkUsed('');
+      setMalaAmount('');
+      setYoghurtAmount('');
+      fetchData();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to record milk processing", variant: "destructive" });
     }
   };
 
@@ -290,26 +311,6 @@ const FarmManagerDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="malaAmount">Mala Processed (L)</Label>
-                    <Input
-                      id="malaAmount"
-                      type="number"
-                      value={malaAmount}
-                      onChange={(e) => setMalaAmount(e.target.value)}
-                      placeholder="Enter mala amount in liters"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="yoghurtAmount">Yoghurt Processed (L)</Label>
-                    <Input
-                      id="yoghurtAmount"
-                      type="number"
-                      value={yoghurtAmount}
-                      onChange={(e) => setYoghurtAmount(e.target.value)}
-                      placeholder="Enter yoghurt amount in liters"
-                    />
-                  </div>
                   <Button onClick={recordMilk} className="w-full">
                     Record Milk
                   </Button>
@@ -414,6 +415,55 @@ const FarmManagerDashboard = () => {
                   </div>
                   <Button onClick={updateFeedInventory} className="w-full">
                     Update Inventory
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-start" variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Record Milk Processing
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Record Milk Processing</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="totalMilkUsed">Total Milk Used (L)</Label>
+                    <Input
+                      id="totalMilkUsed"
+                      type="number"
+                      value={totalMilkUsed}
+                      onChange={(e) => setTotalMilkUsed(e.target.value)}
+                      placeholder="Enter total milk used in liters"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="malaAmount">Mala Produced (L)</Label>
+                    <Input
+                      id="malaAmount"
+                      type="number"
+                      value={malaAmount}
+                      onChange={(e) => setMalaAmount(e.target.value)}
+                      placeholder="Enter mala amount in liters"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="yoghurtAmount">Yoghurt Produced (L)</Label>
+                    <Input
+                      id="yoghurtAmount"
+                      type="number"
+                      value={yoghurtAmount}
+                      onChange={(e) => setYoghurtAmount(e.target.value)}
+                      placeholder="Enter yoghurt amount in liters"
+                    />
+                  </div>
+                  <Button onClick={recordMilkProcessing} className="w-full">
+                    Record Processing
                   </Button>
                 </div>
               </DialogContent>

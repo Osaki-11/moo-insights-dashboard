@@ -110,6 +110,36 @@ export type Database = {
         }
         Relationships: []
       }
+      milk_processing_records: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          mala_amount: number
+          total_milk_used: number
+          updated_at: string
+          yoghurt_amount: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          mala_amount?: number
+          total_milk_used?: number
+          updated_at?: string
+          yoghurt_amount?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          mala_amount?: number
+          total_milk_used?: number
+          updated_at?: string
+          yoghurt_amount?: number
+        }
+        Relationships: []
+      }
       milk_records: {
         Row: {
           amount: number
@@ -117,12 +147,10 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          mala_amount: number | null
           milking_period: string | null
           milking_time: string | null
           quality_grade: string | null
           updated_at: string
-          yoghurt_amount: number | null
         }
         Insert: {
           amount: number
@@ -130,12 +158,10 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          mala_amount?: number | null
           milking_period?: string | null
           milking_time?: string | null
           quality_grade?: string | null
           updated_at?: string
-          yoghurt_amount?: number | null
         }
         Update: {
           amount?: number
@@ -143,12 +169,10 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          mala_amount?: number | null
           milking_period?: string | null
           milking_time?: string | null
           quality_grade?: string | null
           updated_at?: string
-          yoghurt_amount?: number | null
         }
         Relationships: [
           {
