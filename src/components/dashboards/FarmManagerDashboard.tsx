@@ -33,6 +33,9 @@ const FarmManagerDashboard = () => {
   // Form states
   const [milkAmount, setMilkAmount] = useState('');
   const [selectedCow, setSelectedCow] = useState('');
+  const [milkingPeriod, setMilkingPeriod] = useState('');
+  const [malaAmount, setMalaAmount] = useState('');
+  const [yoghurtAmount, setYoghurtAmount] = useState('');
   const [eggCount, setEggCount] = useState('');
   const [slaughterCount, setSlaughterCount] = useState('');
   const [feedType, setFeedType] = useState('');
