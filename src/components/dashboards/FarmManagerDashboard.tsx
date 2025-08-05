@@ -93,7 +93,10 @@ const FarmManagerDashboard = () => {
         .insert({
           cow_id: selectedCow,
           amount: parseFloat(milkAmount),
-          milking_time: new Date().toTimeString().split(' ')[0]
+          milking_time: new Date().toTimeString().split(' ')[0],
+          milking_period: milkingPeriod,
+          mala_amount: parseFloat(malaAmount) || 0,
+          yoghurt_amount: parseFloat(yoghurtAmount) || 0
         });
 
       if (error) throw error;
@@ -107,6 +110,9 @@ const FarmManagerDashboard = () => {
       toast({ title: "Success", description: "Milk production recorded successfully" });
       setMilkAmount('');
       setSelectedCow('');
+      setMilkingPeriod('');
+      setMalaAmount('');
+      setYoghurtAmount('');
       fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record milk production", variant: "destructive" });
@@ -269,6 +275,39 @@ const FarmManagerDashboard = () => {
                       value={milkAmount}
                       onChange={(e) => setMilkAmount(e.target.value)}
                       placeholder="Enter amount in liters"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="milkingPeriod">Milking Period</Label>
+                    <Select value={milkingPeriod} onValueChange={setMilkingPeriod}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select milking time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="morning">Morning</SelectItem>
+                        <SelectItem value="afternoon">Afternoon</SelectItem>
+                        <SelectItem value="evening">Evening</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="malaAmount">Mala Processed (L)</Label>
+                    <Input
+                      id="malaAmount"
+                      type="number"
+                      value={malaAmount}
+                      onChange={(e) => setMalaAmount(e.target.value)}
+                      placeholder="Enter mala amount in liters"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="yoghurtAmount">Yoghurt Processed (L)</Label>
+                    <Input
+                      id="yoghurtAmount"
+                      type="number"
+                      value={yoghurtAmount}
+                      onChange={(e) => setYoghurtAmount(e.target.value)}
+                      placeholder="Enter yoghurt amount in liters"
                     />
                   </div>
                   <Button onClick={recordMilk} className="w-full">
