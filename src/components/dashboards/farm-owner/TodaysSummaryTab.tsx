@@ -30,6 +30,8 @@ interface SlaughterRecord {
 interface ProductionRecord {
   date: Date | string;
   rawMilk: number;
+  malaAmount: number;
+  yoghurtAmount: number;
 }
 
 interface Cow {
@@ -111,6 +113,28 @@ const TodaysSummaryTab = ({
     })
     .reduce((total, record) => total + (record.rawMilk || 0), 0);
 
+  const todaysMala = productionRecords
+    .filter(record => {
+      try {
+        const recordDate = safeDateConvert(record.date);
+        return recordDate.toDateString() === new Date().toDateString();
+      } catch {
+        return false;
+      }
+    })
+    .reduce((total, record) => total + (record.malaAmount || 0), 0);
+
+  const todaysYoghurt = productionRecords
+    .filter(record => {
+      try {
+        const recordDate = safeDateConvert(record.date);
+        return recordDate.toDateString() === new Date().toDateString();
+      } catch {
+        return false;
+      }
+    })
+    .reduce((total, record) => total + (record.yoghurtAmount || 0), 0);
+
   return (
     <div className="space-y-6">
       <Card className="mb-6">
@@ -133,6 +157,10 @@ const TodaysSummaryTab = ({
               <p className="text-sm text-muted-foreground flex items-center justify-center gap-1 mt-1">
                 <Milk className="h-4 w-4" /> Milk Processed
               </p>
+              <div className="flex justify-center gap-4 mt-2 text-xs">
+                <span className="text-orange-600">Mala: {todaysMala.toFixed(1)}L</span>
+                <span className="text-purple-600">Yogurt: {todaysYoghurt.toFixed(1)}L</span>
+              </div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-3xl font-bold text-primary">{todaysEggs}</p>

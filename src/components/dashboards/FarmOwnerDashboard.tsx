@@ -25,6 +25,8 @@ interface SlaughterRecord {
 interface ProductionRecord {
   date: Date | string;
   rawMilk: number;
+  malaAmount: number;
+  yoghurtAmount: number;
 }
 
 interface SalesRecord {
@@ -126,10 +128,27 @@ const FarmOwnerDashboard = () => {
           count: record.count
         })) || []);
 
-        // Use milk records as production records for now
-        setProductionRecords(Object.entries(milkByDate).map(([date, rawMilk]) => ({
+        // Fetch milk processing records
+        const { data: processingData, error: processingError } = await supabase
+          .from('milk_processing_records')
+          .select('date, total_milk_used, mala_amount, yoghurt_amount')
+          .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        if (processingError) throw processingError;
+        
+        const processingByDate = processingData?.reduce((acc: Record<string, {milk: number, mala: number, yoghurt: number}>, record) => {
+          const date = record.date;
+          if (!acc[date]) acc[date] = { milk: 0, mala: 0, yoghurt: 0 };
+          acc[date].milk += parseFloat(record.total_milk_used?.toString() || '0');
+          acc[date].mala += parseFloat(record.mala_amount?.toString() || '0');
+          acc[date].yoghurt += parseFloat(record.yoghurt_amount?.toString() || '0');
+          return acc;
+        }, {}) || {};
+        
+        setProductionRecords(Object.entries(processingByDate).map(([date, data]) => ({
           date: new Date(date),
-          rawMilk: rawMilk * 0.9 // Assume 90% of milk goes to production
+          rawMilk: data.milk,
+          malaAmount: data.mala,
+          yoghurtAmount: data.yoghurt
         })));
 
         // Fetch feed inventory
