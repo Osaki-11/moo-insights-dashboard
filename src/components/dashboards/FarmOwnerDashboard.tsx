@@ -33,6 +33,8 @@ interface SalesRecord {
   date: Date | string;
   amount: number;
   shopId: string;
+  productType: string;
+  quantity: number;
 }
 
 interface FeedItem {
@@ -164,13 +166,15 @@ const FarmOwnerDashboard = () => {
         // Fetch sales records
         const { data: salesData, error: salesError } = await supabase
           .from('sales_records')
-          .select('date, amount, shop_id')
+          .select('date, amount, shop_id, product_type, quantity')
           .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
         if (salesError) throw salesError;
         setSalesRecords(salesData?.map(record => ({
           date: new Date(record.date),
           amount: parseFloat(record.amount?.toString() || '0'),
-          shopId: record.shop_id.toString()
+          shopId: record.shop_id.toString(),
+          productType: record.product_type || 'Unknown',
+          quantity: parseFloat(record.quantity?.toString() || '0')
         })) || []);
 
       } catch (error) {

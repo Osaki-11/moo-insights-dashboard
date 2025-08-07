@@ -10,6 +10,8 @@ interface SalesRecord {
   date: Date | string;
   amount: number;
   shopId: string;
+  productType: string;
+  quantity: number;
 }
 
 interface Shop {
@@ -53,13 +55,20 @@ const ShopsProgressTab = ({ salesRecords, shops }: ShopsProgressTabProps) => {
     .reduce((total, record) => total + (record.amount || 0), 0);
 
   const shopSalesData = shops.map(shop => {
-    const shopSales = salesRecords
-      .filter(record => record.shopId === shop.id.toString())
-      .reduce((total, record) => total + (record.amount || 0), 0);
+    const shopRecords = salesRecords.filter(record => record.shopId === shop.id.toString());
+    const shopSales = shopRecords.reduce((total, record) => total + (record.amount || 0), 0);
+    
+    // Group items by product type and sum quantities
+    const itemsSold = shopRecords.reduce((acc, record) => {
+      const key = record.productType;
+      acc[key] = (acc[key] || 0) + (record.quantity || 0);
+      return acc;
+    }, {} as Record<string, number>);
     
     return {
       ...shop,
-      totalSales: shopSales
+      totalSales: shopSales,
+      itemsSold
     };
   });
 
@@ -154,20 +163,36 @@ const ShopsProgressTab = ({ salesRecords, shops }: ShopsProgressTabProps) => {
               <p className="text-sm text-muted-foreground">{shop.location}</p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Performance</span>
-                  <span className="text-green-600">Good</span>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Performance</span>
+                    <span className="text-green-600">Good</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full" 
+                      style={{ width: `${Math.min((shop.totalSales / Math.max(...shopSalesData.map(s => s.totalSales))) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Relative to best performing shop
+                  </p>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full" 
-                    style={{ width: `${Math.min((shop.totalSales / Math.max(...shopSalesData.map(s => s.totalSales))) * 100, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Relative to best performing shop
-                </p>
+                
+                {Object.keys(shop.itemsSold).length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-muted-foreground">Items Sold</h4>
+                    <div className="space-y-1">
+                      {Object.entries(shop.itemsSold).map(([product, quantity]) => (
+                        <div key={product} className="flex justify-between text-sm">
+                          <span className="capitalize">{product}</span>
+                          <span className="font-medium">{quantity} units</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
