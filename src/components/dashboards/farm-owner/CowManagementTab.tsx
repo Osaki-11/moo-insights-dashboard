@@ -1,6 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Activity, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Cow {
   id: string;
@@ -12,9 +19,49 @@ interface Cow {
 
 interface CowManagementTabProps {
   cows: Cow[];
+  onCowAdded: () => void;
 }
 
-const CowManagementTab = ({ cows }: CowManagementTabProps) => {
+const CowManagementTab = ({ cows, onCowAdded }: CowManagementTabProps) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newCow, setNewCow] = useState({
+    name: '',
+    breed: '',
+    health_status: 'healthy',
+    birth_date: ''
+  });
+  const { toast } = useToast();
+
+  const handleAddCow = async () => {
+    try {
+      const { error } = await supabase
+        .from('cows')
+        .insert([{
+          name: newCow.name,
+          breed: newCow.breed,
+          health_status: newCow.health_status,
+          birth_date: newCow.birth_date || null
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Cow added successfully!"
+      });
+
+      setNewCow({ name: '', breed: '', health_status: 'healthy', birth_date: '' });
+      setIsAddDialogOpen(false);
+      onCowAdded();
+    } catch (error) {
+      console.error('Error adding cow:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add cow. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   return (
     <div className="space-y-6">
       <Card>
@@ -28,7 +75,64 @@ const CowManagementTab = ({ cows }: CowManagementTabProps) => {
           {cows.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No cows found in the system</p>
-              <Button className="mt-4">Add First Cow</Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="mt-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Cow
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Cow</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="cow-name">Name</Label>
+                      <Input
+                        id="cow-name"
+                        value={newCow.name}
+                        onChange={(e) => setNewCow({ ...newCow, name: e.target.value })}
+                        placeholder="Enter cow name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cow-breed">Breed</Label>
+                      <Input
+                        id="cow-breed"
+                        value={newCow.breed}
+                        onChange={(e) => setNewCow({ ...newCow, breed: e.target.value })}
+                        placeholder="Enter cow breed"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cow-health">Health Status</Label>
+                      <Select value={newCow.health_status} onValueChange={(value) => setNewCow({ ...newCow, health_status: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="healthy">Healthy</SelectItem>
+                          <SelectItem value="sick">Sick</SelectItem>
+                          <SelectItem value="recovering">Recovering</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="cow-birth-date">Birth Date (Optional)</Label>
+                      <Input
+                        id="cow-birth-date"
+                        type="date"
+                        value={newCow.birth_date}
+                        onChange={(e) => setNewCow({ ...newCow, birth_date: e.target.value })}
+                      />
+                    </div>
+                    <Button onClick={handleAddCow} className="w-full">
+                      Add Cow
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           ) : (
             <>
@@ -90,7 +194,64 @@ const CowManagementTab = ({ cows }: CowManagementTabProps) => {
               )}
               
               <div className="mt-6 flex gap-4">
-                <Button>Add New Cow</Button>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add New Cow
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Cow</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="cow-name">Name</Label>
+                        <Input
+                          id="cow-name"
+                          value={newCow.name}
+                          onChange={(e) => setNewCow({ ...newCow, name: e.target.value })}
+                          placeholder="Enter cow name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cow-breed">Breed</Label>
+                        <Input
+                          id="cow-breed"
+                          value={newCow.breed}
+                          onChange={(e) => setNewCow({ ...newCow, breed: e.target.value })}
+                          placeholder="Enter cow breed"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cow-health">Health Status</Label>
+                        <Select value={newCow.health_status} onValueChange={(value) => setNewCow({ ...newCow, health_status: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="healthy">Healthy</SelectItem>
+                            <SelectItem value="sick">Sick</SelectItem>
+                            <SelectItem value="recovering">Recovering</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="cow-birth-date">Birth Date (Optional)</Label>
+                        <Input
+                          id="cow-birth-date"
+                          type="date"
+                          value={newCow.birth_date}
+                          onChange={(e) => setNewCow({ ...newCow, birth_date: e.target.value })}
+                        />
+                      </div>
+                      <Button onClick={handleAddCow} className="w-full">
+                        Add Cow
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button variant="outline">Import Cows</Button>
                 <Button variant="outline">Export Data</Button>
               </div>

@@ -229,7 +229,27 @@ const FarmOwnerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="cows">
-          <CowManagementTab cows={cows} />
+          <CowManagementTab cows={cows} onCowAdded={() => {
+            // Refetch cows data
+            const fetchCows = async () => {
+              try {
+                const { data: cowsData, error: cowsError } = await supabase
+                  .from('cows')
+                  .select('*');
+                if (cowsError) throw cowsError;
+                setCows(cowsData?.map(cow => ({
+                  id: cow.id,
+                  name: cow.name,
+                  breed: cow.breed,
+                  healthStatus: cow.health_status,
+                  lastMilkingAmount: cow.last_milking_amount
+                })) || []);
+              } catch (error) {
+                console.error('Error fetching cows:', error);
+              }
+            };
+            fetchCows();
+          }} />
         </TabsContent>
 
         <TabsContent value="users">
