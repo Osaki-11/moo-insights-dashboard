@@ -66,6 +66,7 @@ const FarmOwnerDashboard = () => {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -197,7 +198,7 @@ const FarmOwnerDashboard = () => {
 
   return (
     <div className="p-4">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="overview">Today's Summary</TabsTrigger>
           <TabsTrigger value="farm">Farm Progress</TabsTrigger>
@@ -214,6 +215,7 @@ const FarmOwnerDashboard = () => {
             productionRecords={productionRecords}
             cows={cows}
             shops={shops}
+            onNavigateToTab={setActiveTab}
           />
         </TabsContent>
 

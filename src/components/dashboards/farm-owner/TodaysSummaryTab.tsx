@@ -55,6 +55,7 @@ interface TodaysSummaryTabProps {
   productionRecords: ProductionRecord[];
   cows: Cow[];
   shops: Shop[];
+  onNavigateToTab?: (tabValue: string) => void;
 }
 
 const TodaysSummaryTab = ({
@@ -63,7 +64,8 @@ const TodaysSummaryTab = ({
   slaughterRecords,
   productionRecords,
   cows,
-  shops
+  shops,
+  onNavigateToTab
 }: TodaysSummaryTabProps) => {
   const safeDateConvert = (dateInput: Date | string): Date => {
     return dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -246,11 +248,7 @@ const TodaysSummaryTab = ({
           <CardContent className="space-y-3">
             <Button 
               className="w-full justify-start"
-              onClick={() => {
-                // Navigate to user management tab
-                const tabsTrigger = document.querySelector('[data-value="user-management"]') as HTMLElement;
-                if (tabsTrigger) tabsTrigger.click();
-              }}
+              onClick={() => onNavigateToTab?.('users')}
             >
               <Users className="mr-2 h-4 w-4" />
               Manage Users
@@ -258,11 +256,7 @@ const TodaysSummaryTab = ({
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => {
-                // Navigate to shops progress tab to view revenue
-                const tabsTrigger = document.querySelector('[data-value="shops-progress"]') as HTMLElement;
-                if (tabsTrigger) tabsTrigger.click();
-              }}
+              onClick={() => onNavigateToTab?.('shops')}
             >
               <TrendingUp className="mr-2 h-4 w-4" />
               View Revenue Reports
@@ -270,11 +264,7 @@ const TodaysSummaryTab = ({
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => {
-                // Navigate to farm progress tab for settings
-                const tabsTrigger = document.querySelector('[data-value="farm-progress"]') as HTMLElement;
-                if (tabsTrigger) tabsTrigger.click();
-              }}
+              onClick={() => onNavigateToTab?.('farm')}
             >
               <Settings className="mr-2 h-4 w-4" />
               Update Product Prices
