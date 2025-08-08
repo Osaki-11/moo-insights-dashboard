@@ -184,6 +184,44 @@ export type Database = {
           },
         ]
       }
+      product_prices: {
+        Row: {
+          created_at: string
+          effective_date: string
+          id: string
+          price: number
+          product_type: string
+          shop_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date?: string
+          id?: string
+          price: number
+          product_type: string
+          shop_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          id?: string
+          price?: number
+          product_type?: string
+          shop_id?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_prices_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
