@@ -244,15 +244,38 @@ const TodaysSummaryTab = ({
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start">
+            <Button 
+              className="w-full justify-start"
+              onClick={() => {
+                // Navigate to user management tab
+                const tabsTrigger = document.querySelector('[data-value="user-management"]') as HTMLElement;
+                if (tabsTrigger) tabsTrigger.click();
+              }}
+            >
               <Users className="mr-2 h-4 w-4" />
               Manage Users
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => {
+                // Navigate to shops progress tab to view revenue
+                const tabsTrigger = document.querySelector('[data-value="shops-progress"]') as HTMLElement;
+                if (tabsTrigger) tabsTrigger.click();
+              }}
+            >
               <TrendingUp className="mr-2 h-4 w-4" />
               View Revenue Reports
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => {
+                // Navigate to farm progress tab for settings
+                const tabsTrigger = document.querySelector('[data-value="farm-progress"]') as HTMLElement;
+                if (tabsTrigger) tabsTrigger.click();
+              }}
+            >
               <Settings className="mr-2 h-4 w-4" />
               Update Product Prices
             </Button>
