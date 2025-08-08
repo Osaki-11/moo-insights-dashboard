@@ -5,6 +5,13 @@ import {
   BarChart
 } from 'lucide-react';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 interface SalesRecord {
   date: Date | string;
@@ -77,6 +84,38 @@ const ShopsProgressTab = ({ salesRecords, shops }: ShopsProgressTabProps) => {
     name: shop.name,
     sales: shop.totalSales
   }));
+
+  // Product prices management state
+  const [priceShopId, setPriceShopId] = useState<string>(shops[0]?.id?.toString() || '');
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [loadingPrices, setLoadingPrices] = useState(false);
+  const [priceForm, setPriceForm] = useState({ productType: '', price: '' });
+
+  const loadPrices = async (shopId: number) => {
+    setLoadingPrices(true);
+    const { data, error } = await supabase
+      .from('product_prices')
+      .select('product_type, price')
+      .eq('shop_id', shopId);
+    if (!error) {
+      const map: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        map[row.product_type] = parseFloat(row.price?.toString() || '0');
+      });
+      setPrices(map);
+    }
+    setLoadingPrices(false);
+  };
+
+  useEffect(() => {
+    if (priceShopId) {
+      loadPrices(parseInt(priceShopId));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceShopId]);
+
+  // Shop details dialog state
+  const [detailsShopId, setDetailsShopId] = useState<number | null>(null);
 
   return (
     <div className="space-y-6">
@@ -152,9 +191,96 @@ const ShopsProgressTab = ({ salesRecords, shops }: ShopsProgressTabProps) => {
         </CardContent>
       </Card>
 
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Product Prices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="sm:col-span-1">
+              <Label htmlFor="price-shop">Select Shop</Label>
+              <Select value={priceShopId} onValueChange={setPriceShopId}>
+                <SelectTrigger id="price-shop"><SelectValue placeholder="Choose shop" /></SelectTrigger>
+                <SelectContent>
+                  {shops.map(s => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Prices</Label>
+              <div className="space-y-2 mt-2">
+                {Object.keys(prices).length === 0 && (
+                  <div className="text-sm text-muted-foreground">{loadingPrices ? 'Loading prices...' : 'No prices set for this shop yet.'}</div>
+                )}
+                {Object.entries(prices).map(([product, price]) => (
+                  <div key={product} className="flex items-center justify-between gap-3">
+                    <div className="capitalize text-sm">{product}</div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        className="w-32"
+                        value={price}
+                        onChange={(e) => setPrices(prev => ({ ...prev, [product]: parseFloat(e.target.value || '0') }))}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          await supabase.from('product_prices').upsert({
+                            shop_id: Number(priceShopId),
+                            product_type: product,
+                            price: Number(prices[product] || 0)
+                          });
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Select
+                  value={priceForm.productType}
+                  onValueChange={(v) => setPriceForm(prev => ({ ...prev, productType: v }))}
+                >
+                  <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="milk">Milk</SelectItem>
+                    <SelectItem value="mala">Mala</SelectItem>
+                    <SelectItem value="yogurt">Yogurt</SelectItem>
+                    <SelectItem value="eggs">Eggs</SelectItem>
+                    <SelectItem value="chicken">Chicken</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  placeholder="Price (KES)"
+                  value={priceForm.price}
+                  onChange={(e) => setPriceForm(prev => ({ ...prev, price: e.target.value }))}
+                />
+                <Button onClick={async () => {
+                  if (!priceForm.productType || !priceForm.price || !priceShopId) return;
+                  await supabase.from('product_prices').upsert({
+                    shop_id: Number(priceShopId),
+                    product_type: priceForm.productType,
+                    price: Number(priceForm.price),
+                  });
+                  setPriceForm({ productType: '', price: '' });
+                  await loadPrices(Number(priceShopId));
+                }}>
+                  Add / Update
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {shopSalesData.map((shop) => (
-          <Card key={shop.id}>
+          <Card key={shop.id} className="cursor-pointer hover:shadow-md transition" onClick={() => setDetailsShopId(shop.id)}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{shop.name}</span>
@@ -198,6 +324,49 @@ const ShopsProgressTab = ({ salesRecords, shops }: ShopsProgressTabProps) => {
           </Card>
         ))}
       </div>
+
+      <Dialog open={detailsShopId !== null} onOpenChange={(open) => !open && setDetailsShopId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {shops.find(s => s.id === detailsShopId)?.name} - Today's Sales
+            </DialogTitle>
+            <DialogDescription>
+              Detailed breakdown for today
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {(() => {
+              const todayStr = new Date().toDateString();
+              const records = salesRecords.filter(r => {
+                try { const d = safeDateConvert(r.date); return d.toDateString() === todayStr && r.shopId === String(detailsShopId); } catch { return false; }
+              });
+              const total = records.reduce((sum, r) => sum + (r.amount || 0), 0);
+              const byProduct = records.reduce((acc: Record<string, number>, r) => {
+                acc[r.productType] = (acc[r.productType] || 0) + (r.quantity || 0);
+                return acc;
+              }, {} as Record<string, number>);
+              return (
+                <>
+                  <div className="text-sm text-muted-foreground">Total: KES {total.toFixed(2)}</div>
+                  <div className="space-y-1">
+                    {Object.keys(byProduct).length === 0 ? (
+                      <div className="text-sm text-muted-foreground">No sales recorded today.</div>
+                    ) : (
+                      Object.entries(byProduct).map(([p, q]) => (
+                        <div key={p} className="flex justify-between text-sm">
+                          <span className="capitalize">{p}</span>
+                          <span className="font-medium">{q} units</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -37,12 +37,21 @@ const ShopManagerDashboard = () => {
     amount: ''
   });
 
-  const productPrices = {
-    'milk': 60,
-    'mala': 80,
-    'yogurt': 120,
-    'eggs': 350,
-    'chicken': 800
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [priceForm, setPriceForm] = useState({ productType: '', price: '' });
+
+  const loadPrices = async (shopId: number) => {
+    const { data, error } = await supabase
+      .from('product_prices')
+      .select('product_type, price')
+      .eq('shop_id', shopId);
+    if (!error) {
+      const map: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        map[row.product_type] = parseFloat(row.price?.toString() || '0');
+      });
+      setPrices(map);
+    }
   };
 
   useEffect(() => {
@@ -75,6 +84,9 @@ const ShopManagerDashboard = () => {
           quantity: parseFloat(record.quantity?.toString() || '0'),
           productType: record.product_type || 'Unknown'
         })) || []);
+
+        // Load product prices
+        await loadPrices(profile.shop_id);
 
       } catch (error) {
         console.error('Error fetching shop data:', error);
@@ -147,7 +159,7 @@ const ShopManagerDashboard = () => {
   };
 
   const calculateProductAmount = (productType: string, quantity: string) => {
-    const price = productPrices[productType as keyof typeof productPrices];
+    const price = prices[productType];
     if (price && quantity) {
       return (price * parseFloat(quantity)).toString();
     }
@@ -327,26 +339,52 @@ const ShopManagerDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Milk (per liter)</span>
-                <span className="text-sm text-muted-foreground">KES 60</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Mala (per liter)</span>
-                <span className="text-sm text-muted-foreground">KES 80</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Yogurt (per liter)</span>
-                <span className="text-sm text-muted-foreground">KES 120</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Eggs (per tray)</span>
-                <span className="text-sm text-muted-foreground">KES 350</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Chicken (whole)</span>
-                <span className="text-sm text-muted-foreground">KES 800</span>
-              </div>
+              {Object.keys(prices).length === 0 ? (
+                <p className="text-sm text-muted-foreground">No prices set yet.</p>
+              ) : (
+                Object.entries(prices).map(([product, price]) => (
+                  <div className="flex justify-between items-center" key={product}>
+                    <span className="text-sm font-medium capitalize">{product}</span>
+                    <span className="text-sm text-muted-foreground">KES {price}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Select
+                value={priceForm.productType}
+                onValueChange={(v) => setPriceForm(prev => ({ ...prev, productType: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="milk">Milk</SelectItem>
+                  <SelectItem value="mala">Mala</SelectItem>
+                  <SelectItem value="yogurt">Yogurt</SelectItem>
+                  <SelectItem value="eggs">Eggs</SelectItem>
+                  <SelectItem value="chicken">Chicken</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder="Price (KES)"
+                value={priceForm.price}
+                onChange={(e) => setPriceForm(prev => ({ ...prev, price: e.target.value }))}
+              />
+              <Button onClick={async () => {
+                if (!priceForm.productType || !priceForm.price || !profile?.shop_id) return;
+                const { error } = await supabase.from('product_prices').upsert({
+                  shop_id: profile.shop_id,
+                  product_type: priceForm.productType,
+                  price: parseFloat(priceForm.price)
+                });
+                if (error) {
+                  toast({ title: 'Error', description: 'Failed to save price', variant: 'destructive' });
+                  return;
+                }
+                toast({ title: 'Saved', description: 'Price updated' });
+                setPriceForm({ productType: '', price: '' });
+                await loadPrices(profile.shop_id);
+              }}>Save Price</Button>
             </div>
           </CardContent>
         </Card>

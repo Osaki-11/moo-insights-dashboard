@@ -264,7 +264,7 @@ const TodaysSummaryTab = ({
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => onNavigateToTab?.('farm')}
+              onClick={() => onNavigateToTab?.('shops')}
             >
               <Settings className="mr-2 h-4 w-4" />
               Update Product Prices
