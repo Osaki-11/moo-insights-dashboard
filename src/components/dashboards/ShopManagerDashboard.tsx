@@ -38,7 +38,6 @@ const ShopManagerDashboard = () => {
   });
 
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [priceForm, setPriceForm] = useState({ productType: '', price: '' });
 
   const loadPrices = async (shopId: number) => {
     const { data, error } = await supabase
@@ -350,42 +349,9 @@ const ShopManagerDashboard = () => {
                 ))
               )}
             </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <Select
-                value={priceForm.productType}
-                onValueChange={(v) => setPriceForm(prev => ({ ...prev, productType: v }))}
-              >
-                <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="milk">Milk</SelectItem>
-                  <SelectItem value="mala">Mala</SelectItem>
-                  <SelectItem value="yogurt">Yogurt</SelectItem>
-                  <SelectItem value="eggs">Eggs</SelectItem>
-                  <SelectItem value="chicken">Chicken</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                placeholder="Price (KES)"
-                value={priceForm.price}
-                onChange={(e) => setPriceForm(prev => ({ ...prev, price: e.target.value }))}
-              />
-              <Button onClick={async () => {
-                if (!priceForm.productType || !priceForm.price || !profile?.shop_id) return;
-                const { error } = await supabase.from('product_prices').upsert({
-                  shop_id: profile.shop_id,
-                  product_type: priceForm.productType,
-                  price: parseFloat(priceForm.price)
-                });
-                if (error) {
-                  toast({ title: 'Error', description: 'Failed to save price', variant: 'destructive' });
-                  return;
-                }
-                toast({ title: 'Saved', description: 'Price updated' });
-                setPriceForm({ productType: '', price: '' });
-                await loadPrices(profile.shop_id);
-              }}>Save Price</Button>
-            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Prices are set by farm management
+            </p>
           </CardContent>
         </Card>
       </div>
