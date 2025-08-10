@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import TodaysSummaryTab from './farm-owner/TodaysSummaryTab';
@@ -199,13 +200,15 @@ const FarmOwnerDashboard = () => {
   return (
     <div className="p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
-          <TabsTrigger value="overview">Today's Summary</TabsTrigger>
-          <TabsTrigger value="farm">Farm Progress</TabsTrigger>
-          <TabsTrigger value="shops">Shops Progress</TabsTrigger>
-          <TabsTrigger value="cows">Cow Management</TabsTrigger>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full mb-6">
+          <TabsList className="flex w-max min-w-full md:grid md:grid-cols-5 md:w-full">
+            <TabsTrigger value="overview" className="whitespace-nowrap">Today's Summary</TabsTrigger>
+            <TabsTrigger value="farm" className="whitespace-nowrap">Farm Progress</TabsTrigger>
+            <TabsTrigger value="shops" className="whitespace-nowrap">Shops Progress</TabsTrigger>
+            <TabsTrigger value="cows" className="whitespace-nowrap">Cow Management</TabsTrigger>
+            <TabsTrigger value="users" className="whitespace-nowrap">User Management</TabsTrigger>
+          </TabsList>
+        </ScrollArea>
 
         <TabsContent value="overview">
           <TodaysSummaryTab
