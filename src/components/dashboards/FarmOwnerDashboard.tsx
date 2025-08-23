@@ -200,15 +200,15 @@ const FarmOwnerDashboard = () => {
   return (
     <div className="p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <ScrollArea className="w-full mb-6">
-          <TabsList className="flex w-max min-w-full md:grid md:grid-cols-5 md:w-full">
+        <div className="mb-6 overflow-x-auto">
+          <TabsList className="inline-flex w-max min-w-full md:min-w-0">
             <TabsTrigger value="overview" className="whitespace-nowrap">Today's Summary</TabsTrigger>
             <TabsTrigger value="farm" className="whitespace-nowrap">Farm Progress</TabsTrigger>
             <TabsTrigger value="shops" className="whitespace-nowrap">Shops Progress</TabsTrigger>
             <TabsTrigger value="cows" className="whitespace-nowrap">Cow Management</TabsTrigger>
             <TabsTrigger value="users" className="whitespace-nowrap">User Management</TabsTrigger>
           </TabsList>
-        </ScrollArea>
+        </div>
 
         <TabsContent value="overview">
           <TodaysSummaryTab

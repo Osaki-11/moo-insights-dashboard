@@ -279,9 +279,13 @@ const ShopManagerDashboard = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="milk">Milk (per liter)</SelectItem>
+                        <SelectItem value="milk-cup">Milk-cup (per cup)</SelectItem>
                         <SelectItem value="mala">Mala (per liter)</SelectItem>
                         <SelectItem value="yogurt">Yogurt (per liter)</SelectItem>
-                        <SelectItem value="eggs">Eggs (per tray)</SelectItem>
+                        <SelectItem value="eggs-grade">Eggs-grade (per tray)</SelectItem>
+                        <SelectItem value="eggs-kienyeji">Eggs-kienyeji (per egg)</SelectItem>
+                        <SelectItem value="Eggs-grade">Eggs-grade (per egg)</SelectItem>
+                        <SelectItem value="Eggs-kienyeji">Eggs-kienyeji (per tray)</SelectItem>
                         <SelectItem value="chicken">Chicken (whole)</SelectItem>
                       </SelectContent>
                     </Select>
