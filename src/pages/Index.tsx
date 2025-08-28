@@ -20,7 +20,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <Sprout className="h-16 w-16 text-primary mr-4" />
+            <img src="/lovable-uploads/116f37a2-86fb-4d55-b336-c0013fbefcf8.png" alt="Udderly Moolicious Logo" className="h-12 w-12" />
             <h1 className="text-5xl font-bold text-primary">Udderly Moolicious</h1>
           </div>
           <p className="text-xl text-muted-foreground mb-8">
@@ -74,7 +74,7 @@ const Index = () => {
           <CardContent className="text-center">
             <p className="text-muted-foreground">
               Udderly Moolicious is a locally owned farm specializing in dairy and poultry products. 
-              We manage 7 cows for milk production, process mala and yogurt, and maintain a chicken 
+              We manage 9 cows for milk production, process mala and yogurt, and maintain a chicken 
               operation for eggs and meat. Our products are distributed through 2 retail shops, 
               providing fresh, quality products to our community.
             </p>

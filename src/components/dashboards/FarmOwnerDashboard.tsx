@@ -7,6 +7,7 @@ import FarmProgressTab from './farm-owner/FarmProgressTab';
 import ShopsProgressTab from './farm-owner/ShopsProgressTab';
 import CowManagementTab from './farm-owner/CowManagementTab';
 import UserManagement from '@/components/UserManagement';
+import InventoryManagement from './InventoryManagement';
 
 interface MilkingRecord {
   date: Date | string;
@@ -206,6 +207,7 @@ const FarmOwnerDashboard = () => {
             <TabsTrigger value="farm" className="whitespace-nowrap">Farm Progress</TabsTrigger>
             <TabsTrigger value="shops" className="whitespace-nowrap">Shops Progress</TabsTrigger>
             <TabsTrigger value="cows" className="whitespace-nowrap">Cow Management</TabsTrigger>
+            <TabsTrigger value="inventory" className="whitespace-nowrap">Inventory Management</TabsTrigger>
             <TabsTrigger value="users" className="whitespace-nowrap">User Management</TabsTrigger>
           </TabsList>
         </div>
@@ -263,6 +265,10 @@ const FarmOwnerDashboard = () => {
 
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+        
+        <TabsContent value="inventory">
+          <InventoryManagement />
         </TabsContent>
       </Tabs>
     </div>

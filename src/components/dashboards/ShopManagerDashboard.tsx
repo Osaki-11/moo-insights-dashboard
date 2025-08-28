@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import InventoryManagement from './InventoryManagement';
 
 interface SalesRecord {
   id: string;
@@ -324,10 +325,23 @@ const ShopManagerDashboard = () => {
               </DialogContent>
             </Dialog>
             
-            <Button className="w-full justify-start" variant="outline" disabled>
-              <Package className="mr-2 h-4 w-4" />
-              Check Stock Levels (Coming Soon)
-            </Button>
+            <Dialog>
+  <DialogTrigger asChild>
+    <Button className="w-full justify-start" variant="outline">
+      <Package className="mr-2 h-4 w-4" />
+      Check Stock Levels
+    </Button>
+  </DialogTrigger>
+  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle>Inventory Management</DialogTitle>
+      <DialogDescription>
+        View and manage inventory for your shop.
+      </DialogDescription>
+    </DialogHeader>
+<InventoryManagement />
+  </DialogContent>
+</Dialog>
             
             <Button className="w-full justify-start" variant="outline" disabled>
               <Calendar className="mr-2 h-4 w-4" />

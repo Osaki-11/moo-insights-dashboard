@@ -54,7 +54,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <Sprout className="h-8 w-8 text-primary mr-2" />
+            <img src="/lovable-uploads/116f37a2-86fb-4d55-b336-c0013fbefcf8.png" alt="Udderly Moolicious Logo" className="h-8 w-8" />
             <CardTitle className="text-2xl">Udderly Moolicious</CardTitle>
           </div>
           <CardDescription>Farm Management System</CardDescription>
