@@ -4,15 +4,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Milk, Egg, Wheat, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import CowPerformanceTab from './farm-manager/CowPerformanceTab';
 
 interface Cow {
   id: string;
   name: string;
   last_milking_amount: number;
+  health_status: string;
 }
 
 interface FeedItem {
@@ -255,244 +258,310 @@ const FarmManagerDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Recording</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Milk Production
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Record Milk Production</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="cow">Select Cow</Label>
-                    <Select value={selectedCow} onValueChange={setSelectedCow}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a cow" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cows.map((cow) => (
-                          <SelectItem key={cow.id} value={cow.id}>
-                            {cow.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="amount">Milk Amount (L)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={milkAmount}
-                      onChange={(e) => setMilkAmount(e.target.value)}
-                      placeholder="Enter amount in liters"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="milkingPeriod">Milking Period</Label>
-                    <Select value={milkingPeriod} onValueChange={setMilkingPeriod}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select milking time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning">Morning</SelectItem>
-                        <SelectItem value="afternoon">Afternoon</SelectItem>
-                        <SelectItem value="evening">Evening</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={recordMilk} className="w-full">
-                    Record Milk
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+      <Tabs defaultValue="activities" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="activities">Daily Activities</TabsTrigger>
+          <TabsTrigger value="cows">Cow Performance</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="activities" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Daily Recording</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full justify-start">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Record Milk Production
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Milk Production</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="cow">Select Cow</Label>
+                        <Select value={selectedCow} onValueChange={setSelectedCow}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a cow" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cows.map((cow) => (
+                              <SelectItem key={cow.id} value={cow.id}>
+                                {cow.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="amount">Milk Amount (L)</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          value={milkAmount}
+                          onChange={(e) => setMilkAmount(e.target.value)}
+                          placeholder="Enter amount in liters"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="milkingPeriod">Milking Period</Label>
+                        <Select value={milkingPeriod} onValueChange={setMilkingPeriod}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select milking time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="morning">Morning</SelectItem>
+                            <SelectItem value="afternoon">Afternoon</SelectItem>
+                            <SelectItem value="evening">Evening</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button onClick={recordMilk} className="w-full">
+                        Record Milk
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start" variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Egg Collection
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Record Egg Collection</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="eggs">Number of Eggs</Label>
-                    <Input
-                      id="eggs"
-                      type="number"
-                      value={eggCount}
-                      onChange={(e) => setEggCount(e.target.value)}
-                      placeholder="Enter number of eggs"
-                    />
-                  </div>
-                  <Button onClick={recordEggs} className="w-full">
-                    Record Eggs
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full justify-start" variant="outline">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Record Egg Collection
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Egg Collection</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="eggs">Number of Eggs</Label>
+                        <Input
+                          id="eggs"
+                          type="number"
+                          value={eggCount}
+                          onChange={(e) => setEggCount(e.target.value)}
+                          placeholder="Enter number of eggs"
+                        />
+                      </div>
+                      <Button onClick={recordEggs} className="w-full">
+                        Record Eggs
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start" variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Chicken Slaughter
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Record Chicken Slaughter</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="slaughter">Number of Chickens</Label>
-                    <Input
-                      id="slaughter"
-                      type="number"
-                      value={slaughterCount}
-                      onChange={(e) => setSlaughterCount(e.target.value)}
-                      placeholder="Enter number of chickens"
-                    />
-                  </div>
-                  <Button onClick={recordSlaughter} className="w-full">
-                    Record Slaughter
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full justify-start" variant="outline">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Record Chicken Slaughter
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Chicken Slaughter</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="slaughter">Number of Chickens</Label>
+                        <Input
+                          id="slaughter"
+                          type="number"
+                          value={slaughterCount}
+                          onChange={(e) => setSlaughterCount(e.target.value)}
+                          placeholder="Enter number of chickens"
+                        />
+                      </div>
+                      <Button onClick={recordSlaughter} className="w-full">
+                        Record Slaughter
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start" variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Update Feed Inventory
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Update Feed Inventory</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="feedType">Feed Type</Label>
-                    <Select value={feedType} onValueChange={setFeedType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose feed type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {feedItems.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.feed_type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="feedAmount">Amount to Add (kg)</Label>
-                    <Input
-                      id="feedAmount"
-                      type="number"
-                      value={feedAmount}
-                      onChange={(e) => setFeedAmount(e.target.value)}
-                      placeholder="Enter amount in kg"
-                    />
-                  </div>
-                  <Button onClick={updateFeedInventory} className="w-full">
-                    Update Inventory
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full justify-start" variant="outline">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Update Feed Inventory
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Update Feed Inventory</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="feedType">Feed Type</Label>
+                        <Select value={feedType} onValueChange={setFeedType}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose feed type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {feedItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.feed_type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="feedAmount">Amount to Add (kg)</Label>
+                        <Input
+                          id="feedAmount"
+                          type="number"
+                          value={feedAmount}
+                          onChange={(e) => setFeedAmount(e.target.value)}
+                          placeholder="Enter amount in kg"
+                        />
+                      </div>
+                      <Button onClick={updateFeedInventory} className="w-full">
+                        Update Inventory
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start" variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Milk Processing
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Record Milk Processing</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="totalMilkUsed">Total Milk Used (L)</Label>
-                    <Input
-                      id="totalMilkUsed"
-                      type="number"
-                      value={totalMilkUsed}
-                      onChange={(e) => setTotalMilkUsed(e.target.value)}
-                      placeholder="Enter total milk used in liters"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="malaAmount">Mala Produced (L)</Label>
-                    <Input
-                      id="malaAmount"
-                      type="number"
-                      value={malaAmount}
-                      onChange={(e) => setMalaAmount(e.target.value)}
-                      placeholder="Enter mala amount in liters"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="yoghurtAmount">Yoghurt Produced (L)</Label>
-                    <Input
-                      id="yoghurtAmount"
-                      type="number"
-                      value={yoghurtAmount}
-                      onChange={(e) => setYoghurtAmount(e.target.value)}
-                      placeholder="Enter yoghurt amount in liters"
-                    />
-                  </div>
-                  <Button onClick={recordMilkProcessing} className="w-full">
-                    Record Processing
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full justify-start" variant="outline">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Record Milk Processing
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Milk Processing</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="totalMilkUsed">Total Milk Used (L)</Label>
+                        <Input
+                          id="totalMilkUsed"
+                          type="number"
+                          value={totalMilkUsed}
+                          onChange={(e) => setTotalMilkUsed(e.target.value)}
+                          placeholder="Enter total milk used in liters"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="malaAmount">Mala Produced (L)</Label>
+                        <Input
+                          id="malaAmount"
+                          type="number"
+                          value={malaAmount}
+                          onChange={(e) => setMalaAmount(e.target.value)}
+                          placeholder="Enter mala amount in liters"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="yoghurtAmount">Yoghurt Produced (L)</Label>
+                        <Input
+                          id="yoghurtAmount"
+                          type="number"
+                          value={yoghurtAmount}
+                          onChange={(e) => setYoghurtAmount(e.target.value)}
+                          placeholder="Enter yoghurt amount in liters"
+                        />
+                      </div>
+                      <Button onClick={recordMilkProcessing} className="w-full">
+                        Record Processing
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Cow Performance Today</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {cows.length > 0 ? (
-                cows.map((cow) => (
-                  <div key={cow.id} className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{cow.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cow.last_milking_amount ? `${cow.last_milking_amount}L` : 'No record'}
+            <Card>
+              <CardHeader>
+                <CardTitle>Cow Performance Today</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {cows.length > 0 ? (
+                    cows.map((cow) => (
+                      <div key={cow.id} className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{cow.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {cow.last_milking_amount ? `${cow.last_milking_amount}L` : 'No data'}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No cows found</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="cows" className="space-y-6">
+          <CowPerformanceTab />
+        </TabsContent>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Feed Inventory Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {feedItems.length > 0 ? (
+                    feedItems.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{item.feed_type}</span>
+                        <span className={`text-sm ${item.current_stock <= item.reorder_level ? 'text-red-600' : 'text-green-600'}`}>
+                          {item.current_stock}kg
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No feed inventory data</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Total Cows</span>
+                    <span className="text-sm text-muted-foreground">{cows.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Healthy Cows</span>
+                    <span className="text-sm text-green-600">
+                      {cows.filter(cow => cow.health_status === 'healthy').length}
                     </span>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No cows registered</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Need Attention</span>
+                    <span className="text-sm text-yellow-600">
+                      {cows.filter(cow => cow.health_status !== 'healthy').length}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
