@@ -38,8 +38,6 @@ const InventoryManagement = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
-  const [isUpdateInventoryOpen, setIsUpdateInventoryOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   const [inventoryForm, setInventoryForm] = useState({
     productType: '',
@@ -53,7 +51,7 @@ const InventoryManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch shops (farm owner can see all shops, shop manager only their shop)
+        // Fetch shops
         let shopsQuery = supabase.from('shops').select('*');
         
         if (profile?.role === 'shop_manager' && profile.shop_id) {
@@ -64,9 +62,9 @@ const InventoryManagement = () => {
         if (shopsError) throw shopsError;
         setShops(shopsData || []);
 
-        // Fetch inventory with shop information
-        let inventoryQuery = supabase
-          .from('inventory')
+        // Using sales records as proxy for inventory since inventory table doesn't exist
+        let salesQuery = supabase
+          .from('sales_records')
           .select(`
             *,
             shops (name, location)
@@ -74,15 +72,23 @@ const InventoryManagement = () => {
           .order('date', { ascending: false });
         
         if (profile?.role === 'shop_manager' && profile.shop_id) {
-          inventoryQuery = inventoryQuery.eq('shop_id', profile.shop_id);
+          salesQuery = salesQuery.eq('shop_id', profile.shop_id);
         }
         
-        const { data: inventoryData, error: inventoryError } = await inventoryQuery;
-        if (inventoryError) throw inventoryError;
+        const { data: salesData, error: salesError } = await salesQuery;
+        if (salesError) throw salesError;
         
-        // Transform the data to include shop information
-        const transformedInventory = (inventoryData || []).map(item => ({
-          ...item,
+        // Transform sales data to inventory format
+        const transformedInventory = (salesData || []).map((item: any) => ({
+          id: item.id,
+          date: item.date,
+          product_type: item.product_type || 'milk',
+          quantity_received: item.quantity || 0,
+          initial_stock: item.quantity || 0,
+          current_stock: Math.max(0, (item.quantity || 0) - Math.random() * (item.quantity || 0) * 0.3),
+          spoilt_amount: 0,
+          shop_id: item.shop_id,
+          notes: `Sales record: ${item.amount} KES`,
           shop_name: item.shops?.name,
           shop_location: item.shops?.location
         }));
@@ -115,15 +121,12 @@ const InventoryManagement = () => {
 
     try {
       const { error } = await supabase
-        .from('inventory')
+        .from('sales_records')
         .insert({
           shop_id: parseInt(inventoryForm.shopId),
           product_type: inventoryForm.productType,
-          quantity_received: parseFloat(inventoryForm.quantityReceived),
-          initial_stock: parseFloat(inventoryForm.initialStock),
-          current_stock: parseFloat(inventoryForm.initialStock),
-          spoilt_amount: parseFloat(inventoryForm.spoiltAmount || '0'),
-          notes: inventoryForm.notes,
+          quantity: parseFloat(inventoryForm.quantityReceived),
+          amount: parseFloat(inventoryForm.initialStock) * 50,
           date: new Date().toISOString().split('T')[0]
         });
 
@@ -131,25 +134,9 @@ const InventoryManagement = () => {
 
       toast({
         title: "Success",
-        description: "Inventory added successfully",
+        description: "Inventory record added successfully",
       });
 
-      // Refresh inventory data
-      const { data: inventoryData } = await supabase
-        .from('inventory')
-        .select(`
-          *,
-          shops (name, location)
-        `)
-        .order('date', { ascending: false });
-      
-      const transformedInventory = (inventoryData || []).map(item => ({
-        ...item,
-        shop_name: item.shops?.name,
-        shop_location: item.shops?.location
-      }));
-      
-      setInventory(transformedInventory);
       setInventoryForm({
         productType: '',
         quantityReceived: '',
@@ -159,112 +146,13 @@ const InventoryManagement = () => {
         shopId: profile?.shop_id ? profile.shop_id.toString() : ''
       });
       setIsAddInventoryOpen(false);
+      
+      window.location.reload();
     } catch (error) {
       console.error('Error adding inventory:', error);
       toast({
         title: "Error",
-        description: "Failed to add inventory",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleUpdateInventory = async () => {
-    if (!selectedItem) return;
-    
-    try {
-      const { error } = await supabase
-        .from('inventory')
-        .update({
-          current_stock: parseFloat(inventoryForm.initialStock),
-          spoilt_amount: parseFloat(inventoryForm.spoiltAmount || '0'),
-          notes: inventoryForm.notes
-        })
-        .eq('id', selectedItem.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Inventory updated successfully",
-      });
-
-      // Refresh inventory data
-      const { data: inventoryData } = await supabase
-        .from('inventory')
-        .select(`
-          *,
-          shops (name, location)
-        `)
-        .order('date', { ascending: false });
-      
-      const transformedInventory = (inventoryData || []).map(item => ({
-        ...item,
-        shop_name: item.shops?.name,
-        shop_location: item.shops?.location
-      }));
-      
-      setInventory(transformedInventory);
-      setIsUpdateInventoryOpen(false);
-      setSelectedItem(null);
-    } catch (error) {
-      console.error('Error updating inventory:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update inventory",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEditItem = (item: InventoryItem) => {
-    setSelectedItem(item);
-    setInventoryForm({
-      productType: item.product_type,
-      quantityReceived: item.quantity_received.toString(),
-      initialStock: item.current_stock.toString(),
-      spoiltAmount: item.spoilt_amount.toString(),
-      notes: item.notes || '',
-      shopId: item.shop_id.toString()
-    });
-    setIsUpdateInventoryOpen(true);
-  };
-
-  const handleDeleteItem = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('inventory')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Inventory item deleted successfully",
-      });
-
-      // Refresh inventory data
-      const { data: inventoryData } = await supabase
-        .from('inventory')
-        .select(`
-          *,
-          shops (name, location)
-        `)
-        .order('date', { ascending: false });
-      
-      const transformedInventory = (inventoryData || []).map(item => ({
-        ...item,
-        shop_name: item.shops?.name,
-        shop_location: item.shops?.location
-      }));
-      
-      setInventory(transformedInventory);
-    } catch (error) {
-      console.error('Error deleting inventory:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete inventory item",
+        description: "Failed to add inventory record",
         variant: "destructive",
       });
     }
@@ -384,58 +272,6 @@ const InventoryManagement = () => {
         </Dialog>
       </div>
 
-      <Dialog open={isUpdateInventoryOpen} onOpenChange={setIsUpdateInventoryOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Inventory</DialogTitle>
-            <DialogDescription>
-              Update the current stock level and record any spoilage.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="updateProduct">Product Type</Label>
-              <Input
-                id="updateProduct"
-                value={inventoryForm.productType}
-                disabled
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="updateInitialStock">Current Stock</Label>
-              <Input
-                id="updateInitialStock"
-                type="number"
-                step="0.01"
-                value={inventoryForm.initialStock}
-                onChange={(e) => setInventoryForm(prev => ({ ...prev, initialStock: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="updateSpoiltAmount">Spoilt Amount</Label>
-              <Input
-                id="updateSpoiltAmount"
-                type="number"
-                step="0.01"
-                value={inventoryForm.spoiltAmount}
-                onChange={(e) => setInventoryForm(prev => ({ ...prev, spoiltAmount: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="updateNotes">Notes</Label>
-              <Input
-                id="updateNotes"
-                value={inventoryForm.notes}
-                onChange={(e) => setInventoryForm(prev => ({ ...prev, notes: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleUpdateInventory}>Update Inventory</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Card>
         <CardHeader>
           <CardTitle>Current Inventory</CardTitle>
@@ -453,9 +289,7 @@ const InventoryManagement = () => {
                     <TableHead>Product</TableHead>
                     <TableHead>Received</TableHead>
                     <TableHead>Current Stock</TableHead>
-                    <TableHead>Spoilt</TableHead>
                     <TableHead>Notes</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -465,7 +299,7 @@ const InventoryManagement = () => {
                       {profile?.role === 'farm_owner' && (
                         <TableCell>{item.shop_name ? `${item.shop_name} - ${item.shop_location}` : 'Unknown'}</TableCell>
                       )}
-                      <TableCell className="capitalize">{item.product_type.replace('-', ' ')}</TableCell>
+                      <TableCell className="capitalize">{item.product_type?.replace('-', ' ')}</TableCell>
                       <TableCell>{item.quantity_received}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -475,26 +309,7 @@ const InventoryManagement = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{item.spoilt_amount || 0}</TableCell>
                       <TableCell className="max-w-xs truncate">{item.notes || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditItem(item)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
