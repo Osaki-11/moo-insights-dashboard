@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, Sprout, User } from 'lucide-react';
+import { OfflineIndicator } from './OfflineIndicator';
 
 interface LayoutProps {
   children: ReactNode;
@@ -40,6 +41,8 @@ const Layout = ({ children, title }: LayoutProps) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <OfflineIndicator />
+              
               {profile && (
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="h-4 w-4" />
