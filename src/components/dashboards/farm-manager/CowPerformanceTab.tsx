@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Eye, Activity, TrendingUp } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, Activity, TrendingUp, Edit } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,8 @@ const CowPerformanceTab = () => {
   const [selectedCow, setSelectedCow] = useState<Cow | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [milkingHistory, setMilkingHistory] = useState<MilkRecord[]>([]);
+  const [isEditingHealth, setIsEditingHealth] = useState(false);
+  const [newHealthStatus, setNewHealthStatus] = useState('');
   const { toast } = useToast();
 
   const fetchCows = async () => {
@@ -56,7 +59,9 @@ const CowPerformanceTab = () => {
 
   const handleViewDetails = async (cow: Cow) => {
     setSelectedCow(cow);
+    setNewHealthStatus(cow.health_status);
     setIsDetailsDialogOpen(true);
+    setIsEditingHealth(false);
     
     try {
       // Fetch milking history for past 7 days
@@ -77,6 +82,40 @@ const CowPerformanceTab = () => {
       toast({
         title: "Error",
         description: "Failed to load cow performance data",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateHealthStatus = async () => {
+    if (!selectedCow) return;
+
+    try {
+      const { error } = await supabase
+        .from('cows')
+        .update({ health_status: newHealthStatus })
+        .eq('id', selectedCow.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedCow({ ...selectedCow, health_status: newHealthStatus });
+      setCows(cows.map(cow => 
+        cow.id === selectedCow.id 
+          ? { ...cow, health_status: newHealthStatus }
+          : cow
+      ));
+      setIsEditingHealth(false);
+
+      toast({
+        title: "Success",
+        description: "Health status updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating health status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update health status",
         variant: "destructive"
       });
     }
@@ -254,9 +293,42 @@ const CowPerformanceTab = () => {
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Health Status</Label>
-                  <Badge className={getHealthStatusColor(selectedCow.health_status)}>
-                    {selectedCow.health_status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {isEditingHealth ? (
+                      <div className="flex items-center gap-2">
+                        <Select value={newHealthStatus} onValueChange={setNewHealthStatus}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="healthy">Healthy</SelectItem>
+                            <SelectItem value="sick">Sick</SelectItem>
+                            <SelectItem value="recovering">Recovering</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" onClick={handleUpdateHealthStatus}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setIsEditingHealth(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Badge className={getHealthStatusColor(selectedCow.health_status)}>
+                          {selectedCow.health_status}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setIsEditingHealth(true)}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Update
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Last Milking Amount</Label>
