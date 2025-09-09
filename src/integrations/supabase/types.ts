@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -109,6 +109,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      inventory: {
+        Row: {
+          created_at: string | null
+          current_stock: number
+          date: string
+          id: string
+          initial_stock: number
+          notes: string | null
+          product_type: string
+          quantity_received: number
+          shop_id: number
+          spoilt_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_stock: number
+          date: string
+          id?: string
+          initial_stock: number
+          notes?: string | null
+          product_type: string
+          quantity_received: number
+          shop_id: number
+          spoilt_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_stock?: number
+          date?: string
+          id?: string
+          initial_stock?: number
+          notes?: string | null
+          product_type?: string
+          quantity_received?: number
+          shop_id?: number
+          spoilt_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       milk_processing_records: {
         Row: {
