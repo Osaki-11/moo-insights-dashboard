@@ -74,6 +74,36 @@ export type Database = {
         }
         Relationships: []
       }
+      farm_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feed_inventory: {
         Row: {
           cost_per_unit: number | null
@@ -166,6 +196,7 @@ export type Database = {
           date: string
           id: string
           mala_amount: number
+          production_cost: number | null
           total_milk_used: number
           updated_at: string
           yoghurt_amount: number
@@ -175,6 +206,7 @@ export type Database = {
           date?: string
           id?: string
           mala_amount?: number
+          production_cost?: number | null
           total_milk_used?: number
           updated_at?: string
           yoghurt_amount?: number
@@ -184,6 +216,7 @@ export type Database = {
           date?: string
           id?: string
           mala_amount?: number
+          production_cost?: number | null
           total_milk_used?: number
           updated_at?: string
           yoghurt_amount?: number
@@ -318,7 +351,10 @@ export type Database = {
           amount: number
           created_at: string
           date: string
+          due_date: string | null
           id: string
+          payment_date: string | null
+          payment_status: string | null
           product_type: string
           quantity: number
           shop_id: number | null
@@ -328,7 +364,10 @@ export type Database = {
           amount: number
           created_at?: string
           date?: string
+          due_date?: string | null
           id?: string
+          payment_date?: string | null
+          payment_status?: string | null
           product_type: string
           quantity: number
           shop_id?: number | null
@@ -338,7 +377,10 @@ export type Database = {
           amount?: number
           created_at?: string
           date?: string
+          due_date?: string | null
           id?: string
+          payment_date?: string | null
+          payment_status?: string | null
           product_type?: string
           quantity?: number
           shop_id?: number | null
