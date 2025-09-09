@@ -6,6 +6,7 @@ import TodaysSummaryTab from './farm-owner/TodaysSummaryTab';
 import FarmProgressTab from './farm-owner/FarmProgressTab';
 import ShopsProgressTab from './farm-owner/ShopsProgressTab';
 import CowManagementTab from './farm-owner/CowManagementTab';
+import FinancialDashboard from './farm-owner/FinancialDashboard';
 import UserManagement from '@/components/UserManagement';
 import InventoryManagement from './InventoryManagement';
 
@@ -204,6 +205,7 @@ const FarmOwnerDashboard = () => {
         <div className="mb-6 overflow-x-auto">
           <TabsList className="inline-flex w-max min-w-full md:min-w-0">
             <TabsTrigger value="overview" className="whitespace-nowrap">Today's Summary</TabsTrigger>
+            <TabsTrigger value="financial" className="whitespace-nowrap">Financial Dashboard</TabsTrigger>
             <TabsTrigger value="farm" className="whitespace-nowrap">Farm Progress</TabsTrigger>
             <TabsTrigger value="shops" className="whitespace-nowrap">Shops Progress</TabsTrigger>
             <TabsTrigger value="cows" className="whitespace-nowrap">Cow Management</TabsTrigger>
@@ -221,6 +223,12 @@ const FarmOwnerDashboard = () => {
             cows={cows}
             shops={shops}
             onNavigateToTab={setActiveTab}
+          />
+        </TabsContent>
+
+        <TabsContent value="financial">
+          <FinancialDashboard
+            salesRecords={salesRecords}
           />
         </TabsContent>
 

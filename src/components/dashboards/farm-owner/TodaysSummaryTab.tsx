@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   Users, 
   Store, 
@@ -9,8 +10,12 @@ import {
   Milk,
   Activity,
   Egg,
-  Drumstick
+  Drumstick,
+  AlertTriangle,
+  DollarSign
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MilkingRecord {
   date: Date | string;
@@ -67,6 +72,72 @@ const TodaysSummaryTab = ({
   shops,
   onNavigateToTab
 }: TodaysSummaryTabProps) => {
+  const [salesData, setSalesData] = useState({ revenue: 0, expenses: 0 });
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchFinancialData();
+  }, []);
+
+  const fetchFinancialData = async () => {
+    try {
+      // Get today's sales
+      const today = new Date().toISOString().split('T')[0];
+      const { data: sales } = await supabase
+        .from('sales_records')
+        .select('amount')
+        .eq('date', today);
+      
+      // Get today's expenses
+      const { data: expenses } = await supabase
+        .from('farm_expenses')
+        .select('amount')
+        .eq('date', today);
+
+      // Get overdue payments
+      const { data: overdue } = await supabase
+        .from('sales_records')
+        .select('*')
+        .eq('payment_status', 'pending')
+        .lt('due_date', new Date().toISOString());
+
+      // Get sick cows
+      const sickCows = cows.filter(cow => cow.healthStatus !== 'healthy');
+      
+      const todayRevenue = sales?.reduce((sum, record) => sum + parseFloat(record.amount?.toString() || '0'), 0) || 0;
+      const todayExpenses = expenses?.reduce((sum, record) => sum + parseFloat(record.amount?.toString() || '0'), 0) || 0;
+
+      setSalesData({ revenue: todayRevenue, expenses: todayExpenses });
+
+      // Create alerts
+      const newAlerts = [];
+      if (overdue && overdue.length > 0) {
+        newAlerts.push({
+          type: 'payment',
+          message: `${overdue.length} overdue payments`,
+          severity: 'high'
+        });
+      }
+      if (sickCows.length > 0) {
+        newAlerts.push({
+          type: 'health',
+          message: `${sickCows.length} cows need attention`,
+          severity: 'medium'
+        });
+      }
+      if (todayExpenses > todayRevenue && todayRevenue > 0) {
+        newAlerts.push({
+          type: 'profit',
+          message: 'Daily expenses exceed revenue',
+          severity: 'high'
+        });
+      }
+
+      setAlerts(newAlerts);
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+    }
+  };
   const safeDateConvert = (dateInput: Date | string): Date => {
     return dateInput instanceof Date ? dateInput : new Date(dateInput);
   };
@@ -137,8 +208,34 @@ const TodaysSummaryTab = ({
     })
     .reduce((total, record) => total + (record.yoghurtAmount || 0), 0);
 
+  const dailyProfit = salesData.revenue - salesData.expenses;
+
   return (
     <div className="space-y-6">
+      {/* Critical Alerts */}
+      {alerts.length > 0 && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Critical Alerts - Action Required
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {alerts.map((alert, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
+                  <span className="text-sm">{alert.message}</span>
+                  <Badge variant={alert.severity === 'high' ? 'destructive' : 'secondary'}>
+                    {alert.severity}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -215,13 +312,15 @@ const TodaysSummaryTab = ({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">KES 45,000</div>
+            <div className={`text-2xl font-bold ${dailyProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              KES {dailyProfit.toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              Revenue: {salesData.revenue.toFixed(2)} | Costs: {salesData.expenses.toFixed(2)}
             </p>
           </CardContent>
         </Card>
