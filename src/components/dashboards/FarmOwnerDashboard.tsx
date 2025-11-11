@@ -200,18 +200,20 @@ const FarmOwnerDashboard = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-1 md:p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-6 overflow-x-auto">
-          <TabsList className="inline-flex w-max min-w-full md:min-w-0">
-            <TabsTrigger value="overview" className="whitespace-nowrap">Today's Summary</TabsTrigger>
-            <TabsTrigger value="financial" className="whitespace-nowrap">Financial Dashboard</TabsTrigger>
-            <TabsTrigger value="farm" className="whitespace-nowrap">Farm Progress</TabsTrigger>
-            <TabsTrigger value="shops" className="whitespace-nowrap">Shops Progress</TabsTrigger>
-            <TabsTrigger value="cows" className="whitespace-nowrap">Cow Management</TabsTrigger>
-            <TabsTrigger value="inventory" className="whitespace-nowrap">Inventory Management</TabsTrigger>
-            <TabsTrigger value="users" className="whitespace-nowrap">User Management</TabsTrigger>
-          </TabsList>
+        <div className="mb-4 md:mb-6 -mx-2 md:mx-0">
+          <div className="overflow-x-auto px-2 md:px-0 scrollbar-hide">
+            <TabsList className="inline-flex w-max min-w-full md:min-w-0 h-auto flex-nowrap gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="overview" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Today's Summary</TabsTrigger>
+              <TabsTrigger value="financial" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Financial</TabsTrigger>
+              <TabsTrigger value="farm" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Farm</TabsTrigger>
+              <TabsTrigger value="shops" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Shops</TabsTrigger>
+              <TabsTrigger value="cows" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Cows</TabsTrigger>
+              <TabsTrigger value="inventory" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Inventory</TabsTrigger>
+              <TabsTrigger value="users" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Users</TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
         <TabsContent value="overview">
