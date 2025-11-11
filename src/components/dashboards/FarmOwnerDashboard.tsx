@@ -9,6 +9,10 @@ import CowManagementTab from './farm-owner/CowManagementTab';
 import FinancialDashboard from './farm-owner/FinancialDashboard';
 import UserManagement from '@/components/UserManagement';
 import InventoryManagement from './InventoryManagement';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Menu, LayoutDashboard, DollarSign, Sprout, Store, Beef, Package, Users } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MilkingRecord {
   date: Date | string;
@@ -70,6 +74,8 @@ const FarmOwnerDashboard = () => {
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -199,22 +205,74 @@ const FarmOwnerDashboard = () => {
     );
   }
 
+  const tabs = [
+    { value: "overview", label: "Today's Summary", icon: LayoutDashboard },
+    { value: "financial", label: "Financial", icon: DollarSign },
+    { value: "farm", label: "Farm", icon: Sprout },
+    { value: "shops", label: "Shops", icon: Store },
+    { value: "cows", label: "Cows", icon: Beef },
+    { value: "inventory", label: "Inventory", icon: Package },
+    { value: "users", label: "Users", icon: Users },
+  ];
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className="p-1 md:p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-4 md:mb-6 -mx-2 md:mx-0">
-          <div className="overflow-x-auto px-2 md:px-0 scrollbar-hide">
-            <TabsList className="inline-flex w-max min-w-full md:min-w-0 h-auto flex-nowrap gap-1 bg-muted/50 p-1">
-              <TabsTrigger value="overview" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Today's Summary</TabsTrigger>
-              <TabsTrigger value="financial" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Financial</TabsTrigger>
-              <TabsTrigger value="farm" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Farm</TabsTrigger>
-              <TabsTrigger value="shops" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Shops</TabsTrigger>
-              <TabsTrigger value="cows" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Cows</TabsTrigger>
-              <TabsTrigger value="inventory" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Inventory</TabsTrigger>
-              <TabsTrigger value="users" className="whitespace-nowrap text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 data-[state=active]:bg-background">Users</TabsTrigger>
+        {/* Mobile Navigation Menu */}
+        {isMobile ? (
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">
+              {tabs.find(t => t.value === activeTab)?.label}
+            </h2>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Menu className="h-4 w-4 mr-2" />
+                  Menu
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72">
+                <SheetHeader>
+                  <SheetTitle>Navigation</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-2">
+                  {tabs.map((tab) => (
+                    <Button
+                      key={tab.value}
+                      variant={activeTab === tab.value ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => handleTabChange(tab.value)}
+                    >
+                      <tab.icon className="h-4 w-4 mr-2" />
+                      {tab.label}
+                    </Button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        ) : (
+          /* Desktop Tabs */
+          <div className="mb-4 md:mb-6">
+            <TabsList className="inline-flex w-max h-auto flex-wrap gap-1 bg-muted/50 p-1">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="whitespace-nowrap text-sm px-3 py-2 data-[state=active]:bg-background"
+                >
+                  <tab.icon className="h-4 w-4 mr-2" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
-        </div>
+        )}
 
         <TabsContent value="overview">
           <TodaysSummaryTab
