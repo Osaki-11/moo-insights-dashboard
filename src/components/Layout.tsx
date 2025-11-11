@@ -44,6 +44,13 @@ const Layout = ({ children, title }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/20">
       <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50">
+        <div className="bg-primary/10 border-b border-primary/20">
+          <div className="container mx-auto px-4 py-2">
+            <p className="text-sm text-primary font-medium text-center">
+              Welcome back, {profile?.full_name || 'User'}! 👋
+            </p>
+          </div>
+        </div>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
