@@ -9,6 +9,7 @@ import { Milk, Egg, Wheat, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useOfflineData } from '@/hooks/useOfflineData';
 import CowPerformanceTab from './farm-manager/CowPerformanceTab';
 
 interface Cow {
@@ -28,10 +29,34 @@ interface FeedItem {
 const FarmManagerDashboard = () => {
   const [todaysMilk, setTodaysMilk] = useState(0);
   const [todaysEggs, setTodaysEggs] = useState(0);
-  const [cows, setCows] = useState<Cow[]>([]);
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Use offline-first data fetching
+  const { data: milkRecords, loading: milkLoading, addRecord: addMilkRecord } = useOfflineData<any>({
+    table: 'milk_records',
+  });
+  
+  const { data: eggRecords, loading: eggLoading, addRecord: addEggRecord } = useOfflineData<any>({
+    table: 'egg_records',
+  });
+  
+  const { data: cows, loading: cowsLoading } = useOfflineData<Cow>({
+    table: 'cows',
+  });
+  
+  const { data: feedItems, loading: feedLoading } = useOfflineData<FeedItem>({
+    table: 'feed_inventory',
+  });
+  
+  const { addRecord: addSlaughterRecord } = useOfflineData<any>({
+    table: 'slaughter_records',
+  });
+  
+  const { addRecord: addProcessingRecord } = useOfflineData<any>({
+    table: 'milk_processing_records',
+  });
+  
+  const loading = milkLoading || eggLoading || cowsLoading || feedLoading;
 
   // Form states
   const [milkAmount, setMilkAmount] = useState('');
@@ -47,50 +72,20 @@ const FarmManagerDashboard = () => {
   const [malaAmount, setMalaAmount] = useState('');
   const [yoghurtAmount, setYoghurtAmount] = useState('');
 
-  const fetchData = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-
-      // Fetch today's milk
-      const { data: milkData } = await supabase
-        .from('milk_records')
-        .select('amount')
-        .eq('date', today);
-      
-      const totalMilk = milkData?.reduce((sum, record) => sum + parseFloat(record.amount?.toString() || '0'), 0) || 0;
-      setTodaysMilk(totalMilk);
-
-      // Fetch today's eggs
-      const { data: eggData } = await supabase
-        .from('egg_records')
-        .select('count')
-        .eq('date', today);
-      
-      const totalEggs = eggData?.reduce((sum, record) => sum + (record.count || 0), 0) || 0;
-      setTodaysEggs(totalEggs);
-
-      // Fetch cows
-      const { data: cowsData } = await supabase
-        .from('cows')
-        .select('*');
-      setCows(cowsData || []);
-
-      // Fetch feed inventory
-      const { data: feedData } = await supabase
-        .from('feed_inventory')
-        .select('*');
-      setFeedItems(feedData || []);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Calculate today's totals from offline data
   useEffect(() => {
-    fetchData();
-  }, []);
+    const today = new Date().toISOString().split('T')[0];
+    
+    const totalMilk = milkRecords
+      .filter((record: any) => record.date === today)
+      .reduce((sum, record: any) => sum + parseFloat(record.amount?.toString() || '0'), 0);
+    setTodaysMilk(totalMilk);
+    
+    const totalEggs = eggRecords
+      .filter((record: any) => record.date === today)
+      .reduce((sum, record: any) => sum + (record.count || 0), 0);
+    setTodaysEggs(totalEggs);
+  }, [milkRecords, eggRecords]);
 
   const recordMilk = async () => {
     try {
@@ -115,7 +110,6 @@ const FarmManagerDashboard = () => {
       setMilkAmount('');
       setSelectedCow('');
       setMilkingPeriod('');
-      fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record milk production", variant: "destructive" });
     }
@@ -133,7 +127,6 @@ const FarmManagerDashboard = () => {
 
       toast({ title: "Success", description: "Egg collection recorded successfully" });
       setEggCount('');
-      fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record egg collection", variant: "destructive" });
     }
@@ -152,7 +145,6 @@ const FarmManagerDashboard = () => {
 
       toast({ title: "Success", description: "Slaughter record added successfully" });
       setSlaughterCount('');
-      fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record slaughter", variant: "destructive" });
     }
@@ -175,7 +167,6 @@ const FarmManagerDashboard = () => {
       toast({ title: "Success", description: "Feed inventory updated successfully" });
       setFeedType('');
       setFeedAmount('');
-      fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to update feed inventory", variant: "destructive" });
     }
@@ -197,7 +188,6 @@ const FarmManagerDashboard = () => {
       setTotalMilkUsed('');
       setMalaAmount('');
       setYoghurtAmount('');
-      fetchData();
     } catch (error) {
       toast({ title: "Error", description: "Failed to record milk processing", variant: "destructive" });
     }
