@@ -2,8 +2,9 @@ import { ReactNode, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu, Moon, Sun } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
+import { useTheme } from 'next-themes';
 import {
   Sheet,
   SheetContent,
@@ -22,6 +23,7 @@ const Layout = ({ children, title }: LayoutProps) => {
   const { signOut, profile } = useAuth();
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,13 +46,6 @@ const Layout = ({ children, title }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/20">
       <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50">
-        <div className="bg-primary/10 border-b border-primary/20">
-          <div className="container mx-auto px-4 py-2">
-            <p className="text-sm text-primary font-medium text-center">
-              Welcome back, {profile?.full_name || 'User'}! 👋
-            </p>
-          </div>
-        </div>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -61,6 +56,14 @@ const Layout = ({ children, title }: LayoutProps) => {
             {isMobile ? (
               <div className="flex items-center gap-2">
                 <OfflineIndicator />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </Button>
                 <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -102,6 +105,15 @@ const Layout = ({ children, title }: LayoutProps) => {
               <div className="flex items-center space-x-4">
                 <OfflineIndicator />
                 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </Button>
+                
                 {profile && (
                   <div className="flex items-center space-x-2 text-sm">
                     <User className="h-4 w-4" />
@@ -123,6 +135,13 @@ const Layout = ({ children, title }: LayoutProps) => {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+        <div className="bg-primary/10 border-b border-primary/20">
+          <div className="container mx-auto px-4 py-1.5">
+            <p className="text-xs text-primary font-medium text-center">
+              Welcome back, {profile?.full_name || 'User'}! 👋
+            </p>
           </div>
         </div>
       </header>
