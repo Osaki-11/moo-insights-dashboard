@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useOfflineData } from '@/hooks/useOfflineData';
 import InventoryManagement from './InventoryManagement';
 
 interface SalesRecord {
@@ -29,8 +30,6 @@ const ShopManagerDashboard = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [shop, setShop] = useState<Shop | null>(null);
-  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isRecordSaleOpen, setIsRecordSaleOpen] = useState(false);
   const [saleForm, setSaleForm] = useState({
     productType: '',
@@ -39,69 +38,55 @@ const ShopManagerDashboard = () => {
   });
 
   const [prices, setPrices] = useState<Record<string, number>>({});
+  
+  // Use offline-first data fetching
+  const { data: salesData, loading: salesLoading, addRecord: addSale } = useOfflineData<any>({
+    table: 'sales_records',
+    dependencies: [profile?.shop_id]
+  });
+  
+  const { data: shopsData, loading: shopsLoading } = useOfflineData<any>({
+    table: 'shops',
+    dependencies: []
+  });
+  
+  const { data: pricesData, loading: pricesLoading } = useOfflineData<any>({
+    table: 'product_prices',
+    dependencies: [profile?.shop_id]
+  });
+  
+  const loading = salesLoading || shopsLoading || pricesLoading;
+  
+  // Filter sales records for current shop
+  const salesRecords = salesData
+    .filter((record: any) => record.shop_id === profile?.shop_id)
+    .map((record: any) => ({
+      id: record.id,
+      date: record.date,
+      amount: parseFloat(record.amount?.toString() || '0'),
+      quantity: parseFloat(record.quantity?.toString() || '0'),
+      productType: record.product_type || 'Unknown'
+    }))
+    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const loadPrices = async (shopId: number) => {
-    const { data, error } = await supabase
-      .from('product_prices')
-      .select('product_type, price')
-      .eq('shop_id', shopId);
-    if (!error) {
+  // Update shop and prices from offline data
+  useEffect(() => {
+    if (profile?.shop_id) {
+      const currentShop = shopsData.find((s: any) => s.id === profile.shop_id);
+      if (currentShop) {
+        setShop(currentShop);
+      }
+      
+      // Build prices map from offline data
       const map: Record<string, number> = {};
-      (data || []).forEach((row: any) => {
-        map[row.product_type] = parseFloat(row.price?.toString() || '0');
-      });
+      pricesData
+        .filter((p: any) => p.shop_id === profile.shop_id)
+        .forEach((row: any) => {
+          map[row.product_type] = parseFloat(row.price?.toString() || '0');
+        });
       setPrices(map);
     }
-  };
-
-  useEffect(() => {
-    const fetchShopData = async () => {
-      if (!profile?.shop_id) return;
-
-      try {
-        // Fetch shop details
-        const { data: shopData, error: shopError } = await supabase
-          .from('shops')
-          .select('*')
-          .eq('id', profile.shop_id)
-          .single();
-        
-        if (shopError) throw shopError;
-        setShop(shopData);
-
-        // Fetch sales records for this shop
-        const { data: salesData, error: salesError } = await supabase
-          .from('sales_records')
-          .select('*')
-          .eq('shop_id', profile.shop_id)
-          .order('date', { ascending: false });
-        
-        if (salesError) throw salesError;
-        setSalesRecords(salesData?.map(record => ({
-          id: record.id,
-          date: record.date,
-          amount: parseFloat(record.amount?.toString() || '0'),
-          quantity: parseFloat(record.quantity?.toString() || '0'),
-          productType: record.product_type || 'Unknown'
-        })) || []);
-
-        // Load product prices
-        await loadPrices(profile.shop_id);
-
-      } catch (error) {
-        console.error('Error fetching shop data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load shop data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShopData();
-  }, [profile, toast]);
+  }, [profile?.shop_id, shopsData, pricesData]);
 
   const handleRecordSale = async () => {
     if (!saleForm.productType || !saleForm.quantity || !saleForm.amount) {
@@ -114,37 +99,20 @@ const ShopManagerDashboard = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('sales_records')
-        .insert({
-          shop_id: profile?.shop_id,
-          product_type: saleForm.productType,
-          quantity: parseFloat(saleForm.quantity),
-          amount: parseFloat(saleForm.amount),
-          date: new Date().toISOString().split('T')[0]
-        });
-
-      if (error) throw error;
+      // Use offline-first addRecord
+      await addSale({
+        shop_id: profile?.shop_id,
+        product_type: saleForm.productType,
+        quantity: parseFloat(saleForm.quantity),
+        amount: parseFloat(saleForm.amount),
+        date: new Date().toISOString().split('T')[0],
+        payment_status: 'pending',
+      });
 
       toast({
         title: "Success",
         description: "Sale recorded successfully",
       });
-
-      // Refresh sales data
-      const { data: salesData } = await supabase
-        .from('sales_records')
-        .select('*')
-        .eq('shop_id', profile?.shop_id)
-        .order('date', { ascending: false });
-
-      setSalesRecords(salesData?.map(record => ({
-        id: record.id,
-        date: record.date,
-        amount: parseFloat(record.amount?.toString() || '0'),
-        quantity: parseFloat(record.quantity?.toString() || '0'),
-        productType: record.product_type || 'Unknown'
-      })) || []);
 
       setSaleForm({ productType: '', quantity: '', amount: '' });
       setIsRecordSaleOpen(false);
